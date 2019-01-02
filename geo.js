@@ -5,88 +5,87 @@
 
 var t=0;
 
-
 function MovingObject() {
-	this.position = new Vector(10, 10);
-	this.velocity = new Vector(0, 0);
-	this.heading = 0;
+  this.position = new Vector(10, 10);
+  this.velocity = new Vector(0, 0);
+  this.heading = 0;
 };
 
 var p = new MovingObject();
 
 p.draw = function() {
-	var v = verts(this.position.x, this.position.y, 10, 10, this.heading);
-	tri(v[0].x, v[0].y, v[1].x, v[1].y, v[2].x, v[2].y, 15);
+  var v = verts(this.position.x, this.position.y, 10, 10, this.heading);
+  tri(v[0].x, v[0].y, v[1].x, v[1].y, v[2].x, v[2].y, 15);
 
-	v = verts(this.position.x, this.position.y, 5, 5, this.heading);
-	tri(v[0].x, v[0].y, v[1].x, v[1].y, v[2].x, v[2].y, 6);
+  v = verts(this.position.x, this.position.y, 5, 5, this.heading);
+  tri(v[0].x, v[0].y, v[1].x, v[1].y, v[2].x, v[2].y, 6);
 }
 
 p.startBurn = function(forward) {
-	this.burning = true;
-	this.forward = forward;
-	this.burnStartTime = new Date();
-	return (function() {
-		this.burning = false;
-		this.burnStartTime = undefined;
-	}).bind(this);
+  this.burning = true;
+  this.forward = forward;
+  this.burnStartTime = new Date();
+  return (function() {
+    this.burning = false;
+    this.burnStartTime = undefined;
+  }).bind(this);
 }
 
 p.update = function() {
-	if (this.burning) {
-		var scale = (this.forward ? 1 : -1) * 0.1;
-		var thrustVector = new Vector(Math.cos(this.heading), Math.sin(this.heading)).scale(scale);
-		this.velocity = this.velocity.add(thrustVector);
-		var speed = Math.floor(this.velocity.length());
-		var elapsedBurnTime = (new Date() - this.burnStartTime) / 1000;
-		sfx(0, Math.floor(elapsedBurnTime * 10), 5);
-	}
+  if (this.burning) {
+    var scale = (this.forward ? 1 : -1) * 0.1;
+    var thrustVector = new Vector(Math.cos(this.heading), Math.sin(this.heading)).scale(scale);
+    this.velocity = this.velocity.add(thrustVector);
+    var speed = Math.floor(this.velocity.length());
+    var elapsedBurnTime = (new Date() - this.burnStartTime) / 1000;
+    sfx(0, Math.floor(elapsedBurnTime * 10), 5);
+  }
 }
 
 function verts(x, y, w, h, theta) {
-	return [
-		new Vector(0, -h/2).rotate((theta || 0) + Math.PI/2).translate(x || 0, y || 0),
-		new Vector(w/2, h/2).rotate((theta || 0) + Math.PI/2).translate(x || 0, y || 0),
-		new Vector(-w/2, h/2).rotate((theta || 0) + Math.PI/2).translate(x || 0, y || 0),
-	];
+  return [
+    new Vector(0, -h/2).rotate((theta || 0) + Math.PI/2).translate(x || 0, y || 0),
+    new Vector(w/2, h/2).rotate((theta || 0) + Math.PI/2).translate(x || 0, y || 0),
+    new Vector(-w/2, h/2).rotate((theta || 0) + Math.PI/2).translate(x || 0, y || 0),
+  ];
 }
 
 function Particle() {
-	this.position = new Vector(60, 10);
-	this.velocity = new Vector(0, 1);
+  this.position = new Vector(60, 10);
+  this.velocity = new Vector(0, 1);
 }
 Particle.prototype.update = function() {
-	this.position = this.position.add(this.velocity);
+  this.position = this.position.add(this.velocity);
 }
 Particle.prototype.draw = function() {
-	pix(this.position.x, this.position.y, 11);
+  pix(this.position.x, this.position.y, 11);
 }
 
 function Button(number) {
-	this.number = number;
-	this.pressed = false;
-	this.onPressedCallbacks = [];
-	this.offPressedCallbacks = [];
+  this.number = number;
+  this.pressed = false;
+  this.onPressedCallbacks = [];
+  this.offPressedCallbacks = [];
 }
 Button.prototype.update = function() {
-	if (btn(this.number)) {
-		if (!this.pressed) {
-			this.pressed = true;
-			this.offPressedCallbacks = this.onPressedCallbacks.map(function(callback) {
-				return callback(this) || (function() {});
-			});
-		}
-	} else {
-		if (this.pressed) {
-			this.offPressedCallbacks.forEach(function(callback) {
-				callback();
-			});
-		}
-		this.pressed = false;
-	}
+  if (btn(this.number)) {
+    if (!this.pressed) {
+      this.pressed = true;
+      this.offPressedCallbacks = this.onPressedCallbacks.map(function(callback) {
+        return callback(this) || (function() {});
+      });
+    }
+  } else {
+    if (this.pressed) {
+      this.offPressedCallbacks.forEach(function(callback) {
+        callback();
+      });
+    }
+    this.pressed = false;
+  }
 }
 Button.prototype.onPressed = function(callback) {
-	this.onPressedCallbacks.push(callback);
+  this.onPressedCallbacks.push(callback);
 }
 
 var burnButton = new Button(0);
@@ -100,26 +99,26 @@ var particle = new Particle();
 
 function TIC()
 {
-	cls(0);
+  cls(0);
 
-	buttons.forEach(function(button) {
-		button.update();
-	});
-	if (btn(2)) p.heading -= 0.05;
-	if (btn(3)) p.heading += 0.05;
+  buttons.forEach(function(button) {
+    button.update();
+  });
+  if (btn(2)) p.heading -= 0.05;
+  if (btn(3)) p.heading += 0.05;
 
-	p.update();
+  p.update();
 
-	var gravityVector = new Vector(0, 0.01);
-	var windVector = new Vector(0.1 * Math.random() * Math.sin(Math.random() * t / 10), 0);
-	p.velocity = p.velocity.add(gravityVector).add(windVector);
-	p.position = p.position.add(p.velocity).add(gravityVector);
+  var gravityVector = new Vector(0, 0.01);
+  var windVector = new Vector(0.1 * Math.random() * Math.sin(Math.random() * t / 10), 0);
+  p.velocity = p.velocity.add(gravityVector).add(windVector);
+  p.position = p.position.add(p.velocity).add(gravityVector);
 
-	particle.update();
-	particle.draw();
+  particle.update();
+  particle.draw();
 
-	p.draw();
-	t++;
+  p.draw();
+  t++;
 }
 
 function OVR() {
@@ -127,45 +126,45 @@ function OVR() {
 
 function Vector(x, y) {
   this.x = x;
-	this.y = y;
+  this.y = y;
 }
 Vector.prototype.normalize = function() {
-	var l = this.length();
+  var l = this.length();
   return this.scale(1 / l);
 }
 Vector.prototype.scale = function(s) {
-	return new Vector(this.x * s, this.y * s);
+  return new Vector(this.x * s, this.y * s);
 }
 Vector.prototype.add = function(x, y) {
-	if (arguments.length < 2) {
-		y = x.y;
-		x = x.x;
-	}
-	return new Vector(this.x + x, this.y + y);
+  if (arguments.length < 2) {
+    y = x.y;
+    x = x.x;
+  }
+  return new Vector(this.x + x, this.y + y);
 }
 Vector.prototype.subtract = function(x, y) {
-	if (arguments.length < 2) {
-		y = x.y;
-		x = x.x;
-	}
-	return new Vector(this.x - x, this.y - y);
+  if (arguments.length < 2) {
+    y = x.y;
+    x = x.x;
+  }
+  return new Vector(this.x - x, this.y - y);
 }
 Vector.prototype.rotate = function(theta) {
-	var l = this.length();
-	var alpha = Math.atan2(this.y, this.x);
+  var l = this.length();
+  var alpha = Math.atan2(this.y, this.x);
   return new Vector(
-		l * Math.cos(alpha + theta),
-		l * Math.sin(alpha + theta)
-	);
+    l * Math.cos(alpha + theta),
+    l * Math.sin(alpha + theta)
+  );
 };
 Vector.prototype.translate = function(dx, dy) {
   return new Vector(
-		this.x + dx,
-		this.y + dy
-	);
+    this.x + dx,
+    this.y + dy
+  );
 };
 Vector.prototype.length = function() {
-	return Math.sqrt(this.x * this.x + this.y * this.y);
+  return Math.sqrt(this.x * this.x + this.y * this.y);
 }
 
 // <TILES>
